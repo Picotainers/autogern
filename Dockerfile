@@ -13,10 +13,13 @@ RUN apt-get update \
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"
+ENV PYTHONPATH="/opt/autogern/src"
 
 WORKDIR /opt/autogern
 
 RUN git clone --depth 1 --branch "${AUTOGERN_REF}" "${AUTOGERN_REPO}" . \
+    && ln -s src/models.py src/models_intra.py \
+    && ln -s src/searchspace.py src/searchspace_diffpool.py \
     && rm -rf .git
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
@@ -41,6 +44,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 FROM python:3.11-slim-bookworm
 
 ENV PATH="/opt/venv/bin:${PATH}"
+ENV PYTHONPATH="/opt/autogern/src"
 
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /opt/autogern /opt/autogern
