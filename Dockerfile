@@ -18,8 +18,8 @@ ENV PYTHONPATH="/opt/autogern/src"
 WORKDIR /opt/autogern
 
 RUN git clone --depth 1 --branch "${AUTOGERN_REF}" "${AUTOGERN_REPO}" . \
-    && ln -s src/models.py src/models_intra.py \
-    && ln -s src/searchspace.py src/searchspace_diffpool.py \
+    && ln -s models.py src/models_intra.py \
+    && ln -s searchspace.py src/searchspace_diffpool.py \
     && rm -rf .git
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
