@@ -17,11 +17,27 @@ ENV PYTHONPATH="/opt/autogern/src"
 
 WORKDIR /opt/autogern
 
-RUN git clone --depth 1 --branch "${AUTOGERN_REF}" "${AUTOGERN_REPO}" . \
-    && sed -i 's/from models_intra import GNNModel/from models import GNNModel/' src/utils_LP.py src/utils_LP_hardsplit.py \
-    && sed -i 's/from searchspace_diffpool import \\*/from searchspace import */' src/models.py \
-    && sed -i '/from utils_LP import \\*/d' src/models.py \
-    && rm -rf .git
+RUN git clone --depth 1 --branch "${AUTOGERN_REF}" "${AUTOGERN_REPO}" .
+
+RUN python - <<'PY'
+from pathlib import Path
+
+root = Path('/opt/autogern/src')
+
+for rel in ['utils_LP.py', 'utils_LP_hardsplit.py']:
+    path = root / rel
+    text = path.read_text()
+    text = text.replace('from models_intra import GNNModel', 'from models import GNNModel')
+    path.write_text(text)
+
+models_path = root / 'models.py'
+models_text = models_path.read_text()
+models_text = models_text.replace('from searchspace_diffpool import *', 'from searchspace import *')
+models_text = models_text.replace('from utils_LP import *\n', '')
+models_path.write_text(models_text)
+PY
+
+RUN rm -rf .git
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.5.1 \
