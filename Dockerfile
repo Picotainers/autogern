@@ -13,19 +13,14 @@ RUN apt-get update \
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"
-ENV PYTHONPATH="/opt/autogern:/opt/autogern/src"
+ENV PYTHONPATH="/opt/autogern/src"
 
 WORKDIR /opt/autogern
 
 RUN git clone --depth 1 --branch "${AUTOGERN_REF}" "${AUTOGERN_REPO}" . \
-    && ln -s src/models.py models_intra.py \
-    && ln -s src/searchspace.py searchspace_diffpool.py \
-    && ln -s src/utils_LP.py utils_LP.py \
-    && ln -s src/mlp.py mlp.py \
-    && ln -s src/aggregate.py aggregate.py \
-    && ln -s src/debug.py debug.py \
-    && ln -s models.py src/models_intra.py \
-    && ln -s searchspace.py src/searchspace_diffpool.py \
+    && sed -i 's/from models_intra import GNNModel/from models import GNNModel/' src/utils_LP.py src/utils_LP_hardsplit.py \
+    && sed -i 's/from searchspace_diffpool import \\*/from searchspace import */' src/models.py \
+    && sed -i '/from utils_LP import \\*/d' src/models.py \
     && rm -rf .git
 
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
@@ -50,7 +45,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 FROM python:3.11-slim-bookworm
 
 ENV PATH="/opt/venv/bin:${PATH}"
-ENV PYTHONPATH="/opt/autogern:/opt/autogern/src"
+ENV PYTHONPATH="/opt/autogern/src"
 
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /opt/autogern /opt/autogern
